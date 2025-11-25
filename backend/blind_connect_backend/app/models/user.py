@@ -50,15 +50,19 @@ class UserCreate(BaseModel):
     tags: List[str] = []
     blocked_users: List[str] = []
 
-# --- THE IMPORTANT PART: The Response Model ---
-# This controls what the frontend actually receives
+# --- MISSING CLASS RESTORED ---
+class UserInDB(UserCreate):
+    hashed_password: str
+# ------------------------------
+
+# --- Response Model ---
 class UserResponse(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     username: str
-    email: EmailStr # <--- Added Email
+    email: EmailStr 
     aura_color: str
-    age: int        # <--- Added Age
-    gender: str     # <--- Added Gender
+    age: int        
+    gender: str     
     
     # The "Spicy" Fields
     sliders: Sliders
