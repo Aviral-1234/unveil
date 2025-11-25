@@ -37,7 +37,17 @@ class UserCreateGoogle(BaseModel):
     aura_color: str = Field(..., description="Hex code like #7B1FA2")
     prompts: List[Prompt]
     sliders: Sliders
-    tags: List[str]
+    
+    # New Fields matching Frontend Onboarding
+    bio_emojis: Optional[str] = None
+    music_taste: Optional[str] = None
+    description: Optional[str] = None # The "About Me" section
+    red_flags: Optional[str] = None   # The "My Red Flags" input
+    looking_for: List[str] = []       # Replaces or works alongside tags
+    tags: List[str] = []              # Kept for compatibility
+    
+    # Requested Feature
+    blocked_users: List[str] = []     # List of user IDs that are blocked
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -48,7 +58,16 @@ class UserCreate(BaseModel):
     aura_color: str = Field(..., description="Hex code like #7B1FA2")
     prompts: List[Prompt]
     sliders: Sliders
-    tags: List[str]
+    
+    # New Fields
+    bio_emojis: Optional[str] = None
+    music_taste: Optional[str] = None
+    description: Optional[str] = None
+    red_flags: Optional[str] = None
+    looking_for: List[str] = []
+    tags: List[str] = []
+    
+    blocked_users: List[str] = []
     
     class Config:
         schema_extra = {
@@ -69,7 +88,13 @@ class UserCreate(BaseModel):
                     "planning_style": 5,
                     "humor": 10
                 },
-                "tags": ["3AM Drives", "Iced Coffee Addict"]
+                "bio_emojis": "👽 🎧 🌙",
+                "music_taste": "Indie Rock & 90s Hip Hop",
+                "description": "Just here for the vibes.",
+                "red_flags": "I put milk before cereal",
+                "looking_for": ["Relationship", "Gaming Buddy"],
+                "tags": ["3AM Drives"],
+                "blocked_users": []
             }
         }
 
@@ -80,6 +105,9 @@ class UserResponse(BaseModel):
     id: str
     username: str
     aura_color: str
+    age: Optional[int]
+    gender: Optional[str]
+    bio_emojis: Optional[str]
     
     class Config:
         allow_population_by_field_name = True

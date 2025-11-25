@@ -1,63 +1,74 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import api from '../api/axios';
+import api from '../api/axios'; // Import the real API instance
 
 const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
       token: null,
-      tempGoogleToken: null, // Stores token while user creates profile
+      tempGoogleToken: null, // Stores the ID token from the Login screen
       isLoading: false,
       error: null,
 
-      // 1. Google Login / Check
+      // Action 1: Initial Google Login (just stores the token temporarily)
       googleAuthAction: async (googleToken) => {
         set({ isLoading: true, error: null });
         try {
-          const res = await api.post('/auth/google-login', { token: googleToken });
+          // Store token to use it in the next step (Onboarding)
+          set({ tempGoogleToken: googleToken, isLoading: false });
           
-          if (res.data.is_new_user) {
-            // User needs to create a profile. Save token and return status.
-            set({ tempGoogleToken: googleToken, isLoading: false });
-            return { status: 'NEW_USER' }; 
-          } else {
-            // User exists, log them in
-            set({ 
-              token: res.data.access_token, 
-              user: { email: res.data.email }, // Add more user details if available
-              tempGoogleToken: null,
-              isLoading: false 
-            });
-            return { status: 'LOGGED_IN' };
-          }
+          // Optional: You could check if user exists here if your backend has a check-user endpoint
+          // const res = await api.post('/auth/check-user', { token: googleToken });
+          
+          return { status: 'NEW_USER' }; 
         } catch (err) {
-          set({ error: "Google Auth Failed", isLoading: false });
+          set({ error: "Google Auth Handshake Failed", isLoading: false });
           throw err;
         }
       },
 
-      // 2. Finalize Google Signup (Submit Profile)
+      // Action 2: Complete Signup with Profile Data
       completeGoogleSignup: async (profileData) => {
         set({ isLoading: true, error: null });
-        const token = get().tempGoogleToken;
-        
-        if (!token) throw new Error("No Google token found. Please sign in again.");
+        const googleToken = get().tempGoogleToken;
 
+        if (!googleToken) {
+            set({ error: "Google session expired. Please login again.", isLoading: false });
+            return;
+        }
+        
         try {
-            // Combine token with profile data
-            const payload = { ...profileData, token };
-            const res = await api.post('/auth/google-signup', payload);
+            // We send the token in TWO places to be safe (Header + Body)
+            // Backend likely looks for 'Authorization: Bearer <token>' OR body['token']
+            const res = await api.post('/auth/google-signup', 
+                { 
+                    ...profileData, 
+                    token: googleToken  // Sending in body
+                },
+                {
+                    headers: {
+                        // Sending in header as Bearer token (Standard OAuth practice)
+                        Authorization: `Bearer ${googleToken}`
+                    }
+                }
+            );
             
+            // Success! Save the app's internal JWT and user data
             set({ 
                 token: res.data.access_token, 
-                user: { ...profileData }, 
+                user: res.data.user || { ...profileData }, 
                 tempGoogleToken: null, 
                 isLoading: false 
             });
             return true;
+
         } catch (err) {
-            set({ error: err.response?.data?.detail || "Signup Failed", isLoading: false });
+            // Extract the specific error message from FastAPI (response.data.detail)
+            const errorMessage = err.response?.data?.detail || "Signup Failed";
+            console.error("Backend Signup Error:", err.response?.data);
+            
+            set({ error: errorMessage, isLoading: false });
             throw err;
         }
       },

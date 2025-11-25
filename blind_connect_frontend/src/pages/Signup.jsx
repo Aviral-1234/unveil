@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '../components/ui/Slider';
-import { AuraSelector } from '../components/ui/AuraSelector'; // Assuming you have this
+import { AuraSelector } from '../components/ui/AuraSelector'; 
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ChevronLeft, Zap, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Zap, Sparkles, Music, Flag, Search, User } from 'lucide-react';
 
+const LOOKING_FOR_TAGS = [
+  "Relationship", "Casual", "Friends", "Gaming Buddy", 
+  "Late Night Chats", "Vibes Only", "Gym Partner", "Adventure"
+];
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { completeGoogleSignup, isLoading } = useAuthStore();
   const [step, setStep] = useState(1);
   
-  // No email/password here!
   const [formData, setFormData] = useState({
     username: '', 
     age: 20, 
     gender: 'NB',
-    aura_color: '#9333ea', // Default purple
+    bio_emojis: '',
+    music_taste: '',
+    description: '',
+    red_flags: '',
+    looking_for: [],
+    aura_color: '#9333ea', 
     sliders: { social_battery: 5, texting_style: 5, planning_style: 5, humor: 5 },
     prompts: [
       { question: "My toxic trait is...", answer: "" },
@@ -25,6 +33,15 @@ const Onboarding = () => {
     ],
     tags: []
   });
+
+  const handleTagToggle = (tag) => {
+    if (formData.looking_for.includes(tag)) {
+      setFormData(prev => ({ ...prev, looking_for: prev.looking_for.filter(t => t !== tag) }));
+    } else {
+      if (formData.looking_for.length >= 3) return; // Limit to 3
+      setFormData(prev => ({ ...prev, looking_for: [...prev.looking_for, tag] }));
+    }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -35,7 +52,6 @@ const Onboarding = () => {
     }
   };
 
-  // Animation variants
   const slideVariants = {
     enter: (direction) => ({ x: direction > 0 ? 100 : -100, opacity: 0 }),
     center: { x: 0, opacity: 1 },
@@ -43,8 +59,8 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        {/* Dynamic Background based on Aura */}
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+        {/* Dynamic Background */}
         <div 
             className="absolute inset-0 opacity-20 transition-colors duration-700 blur-[100px]"
             style={{ background: `radial-gradient(circle at 50% 50%, ${formData.aura_color}, transparent 70%)` }}
@@ -53,7 +69,7 @@ const Onboarding = () => {
         <div className="z-10 w-full max-w-lg">
             {/* Progress Bar */}
             <div className="flex gap-2 mb-8 justify-center">
-                {[1, 2, 3].map(i => (
+                {[1, 2, 3, 4].map(i => (
                     <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i <= step ? 'w-8 bg-white' : 'w-4 bg-white/20'}`} />
                 ))}
             </div>
@@ -67,12 +83,13 @@ const Onboarding = () => {
                     animate="center"
                     exit="exit"
                     transition={{ duration: 0.3 }}
-                    className="bg-gray-900/40 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl"
+                    className="bg-gray-900/40 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl"
                 >
+                    {/* STEP 1: IDENTITY */}
                     {step === 1 && (
-                        <div className="space-y-6">
-                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                                Who are you?
+                        <div className="space-y-5">
+                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 flex items-center gap-2">
+                                <User size={28} className="text-blue-400" /> Identity
                             </h2>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Display Name</label>
@@ -105,25 +122,42 @@ const Onboarding = () => {
                                     </div>
                                 </div>
                             </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Bio (3 Emojis)</label>
+                                <input 
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-2xl text-center tracking-widest focus:border-purple-500 outline-none transition"
+                                    placeholder="👽 🎧 🌙"
+                                    maxLength={8} // Approx length for 3 emojis + spaces
+                                    value={formData.bio_emojis}
+                                    onChange={e => setFormData({...formData, bio_emojis: e.target.value})}
+                                />
+                            </div>
                             <button onClick={() => setStep(2)} className="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition">
                                 Next <ChevronRight size={20}/>
                             </button>
                         </div>
                     )}
 
+                    {/* STEP 2: VIBE CHECK */}
                     {step === 2 && (
                         <div className="space-y-6">
-                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-400">
-                                The Vibe Check
+                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-400 flex items-center gap-2">
+                                <Zap size={28} className="text-green-400" /> The Vibe
                             </h2>
                             
                             <div className="space-y-6">
-                                {/* Pass custom styles to your Slider component to match dark mode */}
                                 <div className="bg-black/20 p-4 rounded-xl">
                                     <Slider label="Social Battery" value={formData.sliders.social_battery} onChange={(v) => setFormData({...formData, sliders: {...formData.sliders, social_battery: v}})} leftLabel="Introvert" rightLabel="Extrovert" />
                                 </div>
-                                <div className="bg-black/20 p-4 rounded-xl">
-                                    <Slider label="Humor Style" value={formData.sliders.humor} onChange={(v) => setFormData({...formData, sliders: {...formData.sliders, humor: v}})} leftLabel="Dark" rightLabel="Silly" />
+                                
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider flex items-center gap-1"><Music size={12}/> Music Taste</label>
+                                    <input 
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm focus:border-green-500 outline-none"
+                                        placeholder="e.g. Techno, Indie Rock, 90s Hip Hop"
+                                        value={formData.music_taste}
+                                        onChange={e => setFormData({...formData, music_taste: e.target.value})}
+                                    />
                                 </div>
                             </div>
 
@@ -139,17 +173,74 @@ const Onboarding = () => {
                         </div>
                     )}
 
+                    {/* STEP 3: INTENTIONS & DETAILS */}
                     {step === 3 && (
+                        <div className="space-y-5">
+                            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-rose-500 flex items-center gap-2">
+                                <Search size={28} className="text-rose-500" /> Details
+                            </h2>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">Looking For (Max 3)</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {LOOKING_FOR_TAGS.map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => handleTagToggle(tag)}
+                                            className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${
+                                                formData.looking_for.includes(tag) 
+                                                ? 'bg-pink-500 border-pink-500 text-white' 
+                                                : 'bg-black/30 border-white/10 text-gray-400 hover:border-white/30'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider">About Me (Max 200 words)</label>
+                                <textarea 
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm focus:border-pink-500 outline-none h-24 resize-none"
+                                    placeholder="What makes you, you?"
+                                    value={formData.description}
+                                    onChange={e => setFormData({...formData, description: e.target.value})}
+                                />
+                                <div className="text-right text-[10px] text-gray-500">
+                                    {formData.description.split(' ').length}/200 words
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 uppercase tracking-wider flex items-center gap-1 text-red-400"><Flag size={12}/> My Red Flags</label>
+                                <input 
+                                    className="w-full bg-red-900/10 border border-red-500/20 rounded-xl p-3 text-sm focus:border-red-500 outline-none text-red-200 placeholder-red-500/30"
+                                    placeholder="I put milk before cereal..."
+                                    value={formData.red_flags}
+                                    onChange={e => setFormData({...formData, red_flags: e.target.value})}
+                                />
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button onClick={() => setStep(2)} className="p-4 rounded-xl bg-white/10 hover:bg-white/20"><ChevronLeft/></button>
+                                <button onClick={() => setStep(4)} className="flex-1 bg-white text-black font-bold py-4 rounded-xl">Next</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 4: SPICY PROMPTS */}
+                    {step === 4 && (
                         <div className="space-y-6">
-                             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-orange-500">
-                                Spicy Takes
+                             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-yellow-400 flex items-center gap-2">
+                                <Sparkles size={28} className="text-yellow-400" /> Prompts
                             </h2>
                             
                             {formData.prompts.map((p, i) => (
                                 <div key={i} className="group">
-                                    <p className="text-purple-300 font-bold text-sm mb-2 ml-1">{p.question}</p>
+                                    <p className="text-orange-300 font-bold text-sm mb-2 ml-1">{p.question}</p>
                                     <input 
-                                        className="w-full bg-black/50 border border-white/10 focus:border-pink-500 rounded-xl p-4 outline-none transition-all"
+                                        className="w-full bg-black/50 border border-white/10 focus:border-orange-500 rounded-xl p-4 outline-none transition-all"
                                         placeholder="Don't be shy..."
                                         value={p.answer}
                                         onChange={(e) => {
@@ -162,7 +253,7 @@ const Onboarding = () => {
                             ))}
 
                             <div className="flex gap-4 mt-8">
-                                <button onClick={() => setStep(2)} className="p-4 rounded-xl bg-white/10 hover:bg-white/20"><ChevronLeft/></button>
+                                <button onClick={() => setStep(3)} className="p-4 rounded-xl bg-white/10 hover:bg-white/20"><ChevronLeft/></button>
                                 <button 
                                     onClick={handleSubmit} 
                                     disabled={isLoading}

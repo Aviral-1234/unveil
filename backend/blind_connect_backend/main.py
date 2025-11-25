@@ -1,23 +1,37 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request  # Import Request
+from starlette.middleware.base import BaseHTTPMiddleware # Import BaseHTTPMiddleware
 from app.routers import auth
 from app.db.database import connect_to_mongo, close_mongo_connection
 from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Blind Connect API")
+
+# --- 1. DEFINE THE FIX ---
+# This middleware forces the server to allow popup communication
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+        return response
+
+# --- 2. ADD THE FIX ---
+# Add this BEFORE your CORS middleware
+app.add_middleware(SecurityHeadersMiddleware)
+
 
 origins = [
     "http://localhost:5173",  # Your React/Vite frontend
-    "http://127.0.0.1:5173",  # Sometimes localhost resolves to this IP
-    "http://localhost:8000",  # FastAPI default port
-    
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
 ]
 
 # Add the middleware to the application
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # Allows connections from the defined origins
-    allow_credentials=True,     # Allows cookies/authentication headers
-    allow_methods=["*"],        # Allows all methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],        # Allows all headers
+    allow_origins=origins,      
+    allow_credentials=True,     
+    allow_methods=["*"],        
+    allow_headers=["*"],        
 )
 
 # Events
