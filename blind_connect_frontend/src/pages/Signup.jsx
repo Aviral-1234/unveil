@@ -35,13 +35,23 @@ const Onboarding = () => {
   });
 
   const handleTagToggle = (tag) => {
-    if (formData.looking_for.includes(tag)) {
-      setFormData(prev => ({ ...prev, looking_for: prev.looking_for.filter(t => t !== tag) }));
-    } else {
-      if (formData.looking_for.length >= 3) return; // Limit to 3
-      setFormData(prev => ({ ...prev, looking_for: [...prev.looking_for, tag] }));
-    }
+    setFormData(prev => {
+      if (prev.looking_for.includes(tag)) {
+        return { ...prev, looking_for: prev.looking_for.filter(t => t !== tag) };
+      } else {
+        if (prev.looking_for.length >= 3) return prev;
+        return { ...prev, looking_for: [...prev.looking_for, tag] };
+      }
+    });
   };
+
+const handleSliderChange = (key, val) => {
+    setFormData(prev => ({
+      ...prev,
+      sliders: { ...prev.sliders, [key]: val }
+    }));
+};
+
 
   const handleSubmit = async () => {
     try {
@@ -97,14 +107,14 @@ const Onboarding = () => {
                                     className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-lg focus:border-purple-500 outline-none transition"
                                     placeholder="e.g. Midnight Rider"
                                     value={formData.username}
-                                    onChange={e => setFormData({...formData, username: e.target.value})}
+                                    onChange={e => setFormData(prev => ({...prev, username: e.target.value}))}
                                 />
                             </div>
                             <div className="flex gap-4">
                                 <div className="w-1/3">
                                     <label className="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Age</label>
                                     <input type="number" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-center focus:border-purple-500 outline-none" 
-                                        value={formData.age} onChange={e => setFormData({...formData, age: Number(e.target.value)})}
+                                        value={formData.age} onChange={e => setFormData(prev => ({...prev, age: Number(e.target.value)}))}
                                     />
                                 </div>
                                 <div className="w-2/3">
@@ -113,7 +123,7 @@ const Onboarding = () => {
                                         {['M', 'F', 'NB'].map(g => (
                                             <button 
                                                 key={g}
-                                                onClick={() => setFormData({...formData, gender: g})}
+                                                onClick={() => setFormData(prev => ({...prev, gender: g}))}
                                                 className={`flex-1 py-3 rounded-lg text-sm font-bold transition ${formData.gender === g ? 'bg-white text-black' : 'text-gray-500 hover:text-white'}`}
                                             >
                                                 {g}
@@ -129,7 +139,7 @@ const Onboarding = () => {
                                     placeholder="👽 🎧 🌙"
                                     maxLength={8} // Approx length for 3 emojis + spaces
                                     value={formData.bio_emojis}
-                                    onChange={e => setFormData({...formData, bio_emojis: e.target.value})}
+                                    onChange={e => setFormData(prev => ({...prev, bio_emojis: e.target.value}))}
                                 />
                             </div>
                             <button onClick={() => setStep(2)} className="w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 transition">
@@ -147,7 +157,40 @@ const Onboarding = () => {
                             
                             <div className="space-y-6">
                                 <div className="bg-black/20 p-4 rounded-xl">
-                                    <Slider label="Social Battery" value={formData.sliders.social_battery} onChange={(v) => setFormData({...formData, sliders: {...formData.sliders, social_battery: v}})} leftLabel="Introvert" rightLabel="Extrovert" />
+                                    <Slider 
+                                      label="Social Battery" 
+                                      value={formData.sliders.social_battery} 
+                                      onChange={(v) => handleSliderChange('social_battery', v)} 
+                                      leftLabel="Introvert" 
+                                      rightLabel="Extrovert" 
+                                    />
+                                </div>
+                                <div className="bg-black/20 p-4 rounded-xl">
+                                    <Slider 
+                                      label="Texting Style" 
+                                      value={formData.sliders.texting_style} 
+                                      onChange={(v) => handleSliderChange('texting_style', v)} 
+                                      leftLabel="Dry" 
+                                      rightLabel="Spammy" 
+                                    />
+                                </div>
+                                <div className="bg-black/20 p-4 rounded-xl">
+                                    <Slider 
+                                      label="Planning" 
+                                      value={formData.sliders.planning_style} 
+                                      onChange={(v) => handleSliderChange('planning_style', v)} 
+                                      leftLabel="Go w/ Flow" 
+                                      rightLabel="Itinerary" 
+                                    />
+                                </div>
+                                <div className="bg-black/20 p-4 rounded-xl">
+                                    <Slider 
+                                      label="Humor" 
+                                      value={formData.sliders.humor} 
+                                      onChange={(v) => handleSliderChange('humor', v)} 
+                                      leftLabel="Dark" 
+                                      rightLabel="Silly" 
+                                    />
                                 </div>
                                 
                                 <div>
@@ -156,14 +199,14 @@ const Onboarding = () => {
                                         className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm focus:border-green-500 outline-none"
                                         placeholder="e.g. Techno, Indie Rock, 90s Hip Hop"
                                         value={formData.music_taste}
-                                        onChange={e => setFormData({...formData, music_taste: e.target.value})}
+                                        onChange={e => setFormData(prev => ({...prev, music_taste: e.target.value}))}
                                     />
                                 </div>
                             </div>
 
                             <div className="pt-2">
                                 <p className="text-sm text-gray-400 mb-3">Pick your Aura Color</p>
-                                <AuraSelector selected={formData.aura_color} onSelect={(c) => setFormData({...formData, aura_color: c})} />
+                                <AuraSelector selected={formData.aura_color} onSelect={(c) => setFormData(prev => ({...prev, aura_color: c}))} />
                             </div>
 
                             <div className="flex gap-4">
@@ -205,7 +248,7 @@ const Onboarding = () => {
                                     className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-sm focus:border-pink-500 outline-none h-24 resize-none"
                                     placeholder="What makes you, you?"
                                     value={formData.description}
-                                    onChange={e => setFormData({...formData, description: e.target.value})}
+                                    onChange={e => setFormData(prev => ({...prev, description: e.target.value}))}
                                 />
                                 <div className="text-right text-[10px] text-gray-500">
                                     {formData.description.split(' ').length}/200 words
@@ -218,7 +261,7 @@ const Onboarding = () => {
                                     className="w-full bg-red-900/10 border border-red-500/20 rounded-xl p-3 text-sm focus:border-red-500 outline-none text-red-200 placeholder-red-500/30"
                                     placeholder="I put milk before cereal..."
                                     value={formData.red_flags}
-                                    onChange={e => setFormData({...formData, red_flags: e.target.value})}
+                                    onChange={e => setFormData(prev => ({...prev, red_flags: e.target.value}))}
                                 />
                             </div>
 
@@ -246,7 +289,7 @@ const Onboarding = () => {
                                         onChange={(e) => {
                                             const newPrompts = [...formData.prompts];
                                             newPrompts[i].answer = e.target.value;
-                                            setFormData({...formData, prompts: newPrompts});
+                                            setFormData(prev => ({...prev, prompts: newPrompts}));
                                         }}
                                     />
                                 </div>

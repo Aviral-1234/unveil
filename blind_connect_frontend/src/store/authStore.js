@@ -15,15 +15,27 @@ const useAuthStore = create(
       googleAuthAction: async (googleToken) => {
         set({ isLoading: true, error: null });
         try {
-          // Store token to use it in the next step (Onboarding)
+          const res = await api.post('/auth/google-login', { token: googleToken });
+
+          // CASE A: User Exists -> Log them in immediately
+          if (res.data.is_new_user === false) {
+             set({ 
+                 token: res.data.access_token, 
+                 user: res.data.user, 
+                 tempGoogleToken: null, // Clear temp token, we are done
+                 isLoading: false 
+             });
+             return { status: 'EXISTING_USER' };
+          }
+
+          // CASE B: User is New -> Save token and start Onboarding
+          // We store the Google token temporarily so we can send it later with the profile data
           set({ tempGoogleToken: googleToken, isLoading: false });
-          
-          // Optional: You could check if user exists here if your backend has a check-user endpoint
-          // const res = await api.post('/auth/check-user', { token: googleToken });
-          
           return { status: 'NEW_USER' }; 
+
         } catch (err) {
-          set({ error: "Google Auth Handshake Failed", isLoading: false });
+          console.error("Login Check Error:", err);
+          set({ error: "Login Verification Failed", isLoading: false });
           throw err;
         }
       },
